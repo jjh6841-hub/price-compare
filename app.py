@@ -47,11 +47,11 @@ THEME_COLORS = {
     "dark": {
         "sheet_bg":     "#1e2030",
         "sheet_border": "#464a59",
-        "group_label":  "#d1d5db",
+        "group_label":  "#e5e7eb",
         "badge_bg":     "#262730",
         "btn_bg":       "#262730",
-        "muted_text":   "#8b8fa8",
-        "result_count": "#9ca3af",
+        "muted_text":   "#9ca3af",
+        "result_count": "#a0aec0",
         "placeholder":  "#6b7280",
     },
 }
@@ -80,7 +80,7 @@ section[data-testid="stSidebar"] > div:first-child {
 div[data-baseweb="input"],
 div[data-baseweb="input"] > div {
     background-color: #262730 !important;
-    border-color: #565a6a !important;
+    border: 1px solid #7a7f96 !important;
 }
 input[type="text"], input[type="password"] {
     background-color: #262730 !important;
@@ -88,11 +88,10 @@ input[type="text"], input[type="password"] {
 }
 input::placeholder { color: #686880 !important; }
 
-/* 메인 버튼 (base CSS #fff 오버라이드) */
+/* 메인 버튼 배경/테두리만 — color는 JS paint()가 관리 */
 button[data-baseweb="button"],
 button[data-testid^="stBaseButton"] {
     background:   #262730 !important;
-    color:        #c8c8d8 !important;
     border-color: #565a6a !important;
 }
 /* 사이드바 secondary */
@@ -571,24 +570,26 @@ with right:
         )
 
 # ── JS 버튼 색상 주입 ─────────────────────────────────────────────────────────
-btn_bg = T["btn_bg"]
+# setProperty(..., 'important') 로 CSS !important 를 이겨야 색상이 표시됨
+is_dark = "true" if st.session_state.theme == "dark" else "false"
 components.html(f"""
 <script>
 (function () {{
+    var DARK = {is_dark};
     var C = {{
-        '신설': {{bd:'#86efac', tx:'#15803d'}},
-        '변경': {{bd:'#93c5fd', tx:'#1d4ed8'}},
-        '삭제': {{bd:'#fca5a5', tx:'#b91c1c'}}
+        '신설': {{bd:'#86efac', tx:'#15803d', dbg:'#1a3a1a'}},
+        '변경': {{bd:'#93c5fd', tx:'#1d4ed8', dbg:'#1a1a3a'}},
+        '삭제': {{bd:'#fca5a5', tx:'#b91c1c', dbg:'#3a1a1a'}}
     }};
-    var BG = '{btn_bg}';
     function paint() {{
         window.parent.document.querySelectorAll('button').forEach(function(b) {{
             var t = b.innerText.trim();
             if (C[t]) {{
-                b.style.background  = BG;
-                b.style.borderColor = C[t].bd;
-                b.style.color       = C[t].tx;
-                b.style.fontWeight  = '600';
+                var bg = DARK ? C[t].dbg : '#fff';
+                b.style.setProperty('background',    bg,       'important');
+                b.style.setProperty('border-color',  C[t].bd,  'important');
+                b.style.setProperty('color',         C[t].tx,  'important');
+                b.style.fontWeight = '600';
             }}
         }});
     }}
